@@ -1,0 +1,13 @@
+# Dataset config for Bottle Cap Detection
+
+# Path folder training images
+train: ../data/images/train
+
+# Path folder validation images
+val: ../data/images/val
+
+# Class total
+nc: 3
+
+# Class name
+names: ["light_blue", "dark_blue", "other"]
