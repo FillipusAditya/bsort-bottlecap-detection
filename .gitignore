@@ -1,3 +1,64 @@
-/data
-/models
-todo.txt
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+*.pickle
+*.log
+
+# Virtual environments
+env/
+venv/
+.bottlecap/
+.bottlecap_env/
+.venv/
+.conda/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Editor / OS Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# YOLO training outputs
+runs/
+results/
+
+# YOLO pretrained models 
+yolov8n.pt
+yolo11n.pt
+
+# Dataset 
+data/
+datasets/
+raw/
+processed/
+
+# Checkpoints & weights
+*.pth
+*.ckpt
+
+# W&B
+wandb/
+wandb/*
+
+# Docker / container
+*.env
+*.dockerignore
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Cache / temp
+.tmp/
+temp/
+tmp/
+logs/
+.cache/
+.cache/*
