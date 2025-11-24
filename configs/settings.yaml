@@ -1,0 +1,15 @@
+train:
+    data: "./configs/data.yaml"
+    model: "yolov8n.pt"
+    epochs: 200
+    imgsz: 640
+    batch: 16
+    project: "bsort_wandb"
+    name: "yolov8n-unfreeze5-200"
+    freeze: 5
+    save: true
+
+infer:
+    model: "runs/bsort_wandb/yolov8n-unfreeze5-200/weights/best.pt"
+    project: "runs/bsort_infer"
+    name: "predictions"
