@@ -1,4 +1,0 @@
-pylint
-black
-isort
-pytest
