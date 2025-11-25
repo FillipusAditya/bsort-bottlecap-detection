@@ -1,5 +1,6 @@
 import os
 import re
+from tqdm import tqdm
 
 class LabelRelabeler:
     """
@@ -24,11 +25,11 @@ class LabelRelabeler:
         """Relabel a single YOLO label file based on its color group."""
         code = self.extract_code(fname)
         if code is None:
-            print(f"Skip: missing b-code in {fname}")
+            print(f"[WARN] Skip: missing b-code in {fname}")
             return
 
         if code not in self.color_map:
-            print(f"Skip: no mapping for {code} in {fname}")
+            print(f"[WARN] Skip: no mapping for {code} in {fname}")
             return
 
         new_class = self.color_map[code]
@@ -48,15 +49,17 @@ class LabelRelabeler:
         with open(out_path, "w") as f:
             f.writelines(new_lines)
 
-        print(f"Relabeled {fname} → class={new_class}")
-
     def run(self):
         """Process all label files in the directory."""
-        for fname in os.listdir(self.label_dir):
-            if fname.endswith(".txt"):
-                self.relabel_file(fname)
+        txt_files = [f for f in os.listdir(self.label_dir) if f.endswith(".txt")]
 
-        print("Relabeling completed.")
+        print(f"Found {len(txt_files)} label files. Starting relabeling...\n")
+
+        for fname in tqdm(txt_files, desc="Relabeling", unit="file"):
+            self.relabel_file(fname)
+
+        print("\nRelabeling completed successfully!")
+        print(f"Updated label files are saved in: {os.path.abspath(self.out_dir)}")
 
 if __name__ == "__main__":
     COLOR_MAP = {

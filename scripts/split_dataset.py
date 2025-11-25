@@ -1,6 +1,7 @@
 import os
 import shutil
 import re
+from tqdm import tqdm
 
 class DatasetSplitter:
     """
@@ -42,20 +43,21 @@ class DatasetSplitter:
         for d in dirs:
             if os.path.exists(d):
                 shutil.rmtree(d)
-
             os.makedirs(d, exist_ok=True)
 
-        print("Output folders cleaned and recreated.")
+        print("[INFO] Output folders cleaned and recreated.\n")
 
     def categorize_files(self):
         """Categorize images into buckets based on filename b-code."""
-        for fname in os.listdir(self.img_dir):
+        print("[INFO] Categorizing files into buckets...")
+
+        for fname in tqdm(os.listdir(self.img_dir), desc="Categorizing", unit="file"):
             if not fname.endswith(".jpg"):
                 continue
 
             match = re.search(r"_b(\d)_", fname)
             if not match:
-                print(f"Skip {fname}: missing b-code pattern.")
+                print(f"[WARN] Skip {fname}: missing b-code pattern.")
                 continue
 
             bcode = match.group(1)
@@ -64,41 +66,64 @@ class DatasetSplitter:
             if key:
                 self.buckets[key].append(fname)
             else:
-                print(f"Unknown b-code in: {fname}")
+                print(f"[WARN] Unknown b-code: {fname}")
 
-        print("Files categorized into buckets.")
+        print("[INFO] Files categorized into buckets.\n")
 
     def split_and_copy(self):
         """
         Perform stratified split: 2 train, 1 val for each bucket.
         Copies corresponding .jpg and .txt files.
         """
-        for key, files in self.buckets.items():
+        print("[INFO] Performing stratified split and copying files...")
+
+        for key, files in tqdm(self.buckets.items(), desc="Splitting Buckets"):
             files = sorted(files)
 
             if len(files) != 3:
-                print(f"Warning: {key} expected 3 files, got {len(files)}")
+                print(f"[WARN] {key} expected 3 files, got {len(files)}")
 
             train_files = files[:2]
             val_files = files[2:]
 
-            # Copy training files
+            # Copy training files (LABEL FIRST)
             for f in train_files:
-                shutil.copy(os.path.join(self.img_dir, f), self.out_img_train)
-                shutil.copy(os.path.join(self.lbl_dir, f.replace(".jpg", ".txt")), self.out_lbl_train)
+                label_src = os.path.join(self.lbl_dir, f.replace(".jpg", ".txt"))
+                try:
+                    shutil.copy(label_src, self.out_lbl_train)
+                    shutil.copy(os.path.join(self.img_dir, f), self.out_img_train)
+                except FileNotFoundError:
+                    print(f"[WARN] Missing label for {f}. Skipping.")
+                    continue
 
-            # Copy validation files
+            # Copy validation files (LABEL FIRST)
             for f in val_files:
-                shutil.copy(os.path.join(self.img_dir, f), self.out_img_val)
-                shutil.copy(os.path.join(self.lbl_dir, f.replace(".jpg", ".txt")), self.out_lbl_val)
+                label_src = os.path.join(self.lbl_dir, f.replace(".jpg", ".txt"))
+                try:
+                    shutil.copy(label_src, self.out_lbl_val)
+                    shutil.copy(os.path.join(self.img_dir, f), self.out_img_val)
+                except FileNotFoundError:
+                    print(f"[WARN] Missing label for {f}. Skipping.")
+                    continue
 
-        print("Stratified split completed.")
+        print("\n[INFO] Stratified split completed.\n")
 
     def run(self):
         """Execute the full pipeline."""
         self.clean_output_dirs()
         self.categorize_files()
         self.split_and_copy()
+
+        # Output summary
+        print("====================================================")
+        print(" Dataset Split Completed Successfully!")
+        print("----------------------------------------------------")
+        print(f" Training Images : {os.path.abspath(self.out_img_train)}")
+        print(f" Training Labels : {os.path.abspath(self.out_lbl_train)}")
+        print("----------------------------------------------------")
+        print(f" Validation Images : {os.path.abspath(self.out_img_val)}")
+        print(f" Validation Labels : {os.path.abspath(self.out_lbl_val)}")
+        print("====================================================\n")
 
 if __name__ == "__main__":
     splitter = DatasetSplitter(
